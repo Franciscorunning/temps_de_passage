@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2c3e50">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Francisco Running - Temps de passage</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #ecf0f1; min-height:100vh; padding:20px;
+}
+.container { max-width:650px; margin:0 auto; background:white; border-radius:12px; padding:30px; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+.header { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:30px; padding-bottom:20px; border-bottom:2px solid #ecf0f1; }
+.header .runner-icon { font-size:32px; }
+.header h1 { color:#2c3e50; font-size:24px; font-weight:600; }
+.section { margin-bottom:30px; }
+.section-title { color:#2c3e50; font-size:18px; font-weight:600; margin-bottom:15px; }
+.input-row { display:flex; gap:10px; margin-bottom:15px; }
+.input-group { flex:1; position:relative; }
+label { display:block; margin-bottom:6px; color:#34495e; font-weight:500; font-size:14px; }
+.helper-text { display:block; margin-bottom:6px; color:#7f8c8d; font-size:11px; font-style:italic; }
+select, input[type="number"] {
+  width:100%; padding:12px; border:1px solid #bdc3c7; border-radius:12px;
+  font-size:16px; background:white;
+}
+select:focus, input:focus { outline:none; border-color:#3498db; }
+
+button {
+  width:100%; padding:14px; background:#2c3e50; color:white; border:none; border-radius:12px;
+  font-size:16px; font-weight:500; cursor:pointer; margin-top:10px; transition:0.2s;
+}
+button:hover { background:#34495e; }
+button.secondary {
+  background: #95a5a6;
+  margin-top: 10px;
+}
+button.secondary:hover { background: #7f8c8d; }
+.results { display:none; margin-top:30px; }
+.results.show { display:block; }
+
+.race-info {
+  background: linear-gradient(135deg,#2c3e50 0%,#34495e 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.race-info-distance { 
+  font-size: 14px; 
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+.race-info-time { 
+  font-size: 36px; 
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.race-info-pace { 
+  font-size: 16px; 
+  opacity: 0.9;
+}
+
+.split-times { background:#f8f9fa; padding:20px; border-radius:8px; border:1px solid #e0e0e0; }
+.split-times h3 { color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:600; }
+.split-item { 
+  display:grid; 
+  grid-template-columns:100px 1fr 1fr; 
+  gap:15px; 
+  padding:12px 0; 
+  border-bottom:1px solid #e0e0e0; 
+  align-items:center; 
+}
+.split-item:last-child { border-bottom:none; }
+.split-distance { color:#5a6c7d; font-weight:600; }
+.split-time { color:#2c3e50; font-weight:600; font-size:16px; }
+.split-pace { color:#7f8c8d; font-size:14px; }
+
+/* Styles pour les menus déroulants de temps */
+.time-input-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.time-input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.time-input-label {
+  font-size: 11px;
+  color: #7f8c8d;
+  margin-bottom: 4px;
+  font-weight: 500;
+  text-align: center;
+}
+.time-select {
+  width: 100%;
+  padding: 12px 8px;
+  text-align: center;
+  border: 1px solid #bdc3c7;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  background: white;
+  cursor: pointer;
+}
+.time-separator {
+  font-size: 24px;
+  color: #7f8c8d;
+  font-weight: 600;
+  padding-top: 20px;
+}
+
+.error-message {
+  background: #e74c3c;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  text-align: center;
+  font-weight: 500;
+  display: none;
+}
+.error-message.show {
+  display: block;
+}
+
+@media(max-width:768px){ 
+  .container{padding:20px;} 
+  .input-row{flex-direction:column;} 
+  .split-item{grid-template-columns:1fr; gap:5px;} 
+  .race-info-time{font-size:28px;} 
+}
+@media(max-width:480px){ 
+  .header h1{font-size:20px;} 
+  .header .runner-icon{font-size:28px;} 
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <span class="runner-icon">🏃‍♂️</span>
+    <h1>francisco.running</h1>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Calculateur de temps de passage</h2>
+
+    <div class="input-row">
+      <div class="input-group">
+        <label>Distance de course</label>
+        <span class="helper-text">Sélectionnez votre objectif de course</span>
+        <select id="distance">
+          <option value="" disabled selected>Sélectionner une distance</option>
+          <option value="10000">10 km</option>
+          <option value="21097.5">Semi-marathon</option>
+          <option value="42195">Marathon</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Temps objectif</label>
+      <span class="helper-text">Définissez votre temps cible</span>
+      <div class="time-input-container">
+        <div class="time-input-group">
+          <span class="time-input-label">Heures</span>
+          <select id="hoursInput" class="time-select">
+            <!-- Options générées par JavaScript -->
+          </select>
+        </div>
+        <span class="time-separator">:</span>
+        <div class="time-input-group">
+          <span class="time-input-label">Minutes</span>
+          <select id="minutesInput" class="time-select">
+            <!-- Options générées par JavaScript -->
+          </select>
+        </div>
+        <span class="time-separator">:</span>
+        <div class="time-input-group">
+          <span class="time-input-label">Secondes</span>
+          <select id="secondsInput" class="time-select">
+            <!-- Options générées par JavaScript -->
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-message" id="errorMessage"></div>
+
+    <button onclick="calculate()">Calculer les temps de passage</button>
+    <button class="secondary" onclick="clearResults()">Effacer les résultats</button>
+  </div>
+
+  <div class="results" id="results">
+    <div class="race-info">
+      <div class="race-info-distance" id="raceDistance">--</div>
+      <div class="race-info-time" id="raceTime">--</div>
+      <div class="race-info-pace" id="racePace">Allure moyenne : --</div>
+    </div>
+
+    <div class="split-times">
+      <h3>⏱️ Temps de passage</h3>
+      <div id="splitTimes"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Initialisation des menus déroulants de temps
+function initializeTimeSelects() {
+  const hoursSelect = document.getElementById('hoursInput');
+  const minutesSelect = document.getElementById('minutesInput');
+  const secondsSelect = document.getElementById('secondsInput');
+
+  // Heures (0-5 pour la plupart des courses)
+  for(let i = 0; i <= 10; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i.toString().padStart(2, '0');
+    hoursSelect.appendChild(option);
+  }
+
+  // Minutes (0-59)
+  for(let i = 0; i <= 59; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i.toString().padStart(2, '0');
+    minutesSelect.appendChild(option);
+  }
+
+  // Secondes (0-59)
+  for(let i = 0; i <= 59; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i.toString().padStart(2, '0');
+    secondsSelect.appendChild(option);
+  }
+}
+
+// Appel de l'initialisation au chargement
+initializeTimeSelects();
+
+// Fonction pour afficher les erreurs
+function showError(message) {
+  const errorDiv = document.getElementById('errorMessage');
+  errorDiv.textContent = message;
+  errorDiv.classList.add('show');
+  document.getElementById('results').classList.remove('show');
+}
+
+function hideError() {
+  document.getElementById('errorMessage').classList.remove('show');
+}
+
+function formatTime(s){ 
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.round(s%60); 
+  return h>0?`${h}h${m.toString().padStart(2,'0')}'${sec.toString().padStart(2,'0')}"`:`${m}'${sec.toString().padStart(2,'0')}"`;
+}
+
+function formatPace(sPerKm){ 
+  const m=Math.floor(sPerKm/60), sec=Math.round(sPerKm%60); 
+  return `${m}:${sec.toString().padStart(2,'0')}`; 
+}
+
+function formatDistance(meters) {
+  if (meters >= 1000) {
+    return `${meters / 1000} km`;
+  }
+  return `${meters} m`;
+}
+
+function getDistanceName(distance) {
+  if (distance === 10000) return '10 km';
+  if (distance === 21097.5) return 'Semi-marathon';
+  if (distance === 42195) return 'Marathon';
+  return formatDistance(distance);
+}
+
+function calculate(){
+  hideError();
+  
+  const distanceSelect = document.getElementById('distance');
+  let distance = parseFloat(distanceSelect.value);
+  
+  if(!distanceSelect.value || distanceSelect.value===''){
+    showError('Veuillez sélectionner une distance');
+    return;
+  }
+
+  const hours = parseInt(document.getElementById('hoursInput').value) || 0;
+  const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+  const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
+  
+  const totalSec = hours*3600 + minutes*60 + seconds;
+  
+  if(totalSec===0){ 
+    showError('Entrez un temps valide'); 
+    return; 
+  }
+
+  // Calcul de l'allure moyenne (en secondes par km)
+  const avgPacePerKm = totalSec / (distance / 1000);
+
+  // Définir les points de passage selon la distance
+  let splitPoints = [];
+  if (distance === 10000) {
+    splitPoints = [3000, 5000, 8000, 10000];
+  } else if (distance === 21097.5) {
+    splitPoints = [5000, 10000, 15000, 20000, 21097.5];
+  } else if (distance === 42195) {
+    splitPoints = [5000, 10000, 15000, 20000, 21097.5, 25000, 30000, 35000, 40000, 42195];
+  }
+
+  // Affichage des informations de course
+  document.getElementById('raceDistance').textContent = getDistanceName(distance);
+  document.getElementById('raceTime').textContent = formatTime(totalSec);
+  document.getElementById('racePace').textContent = `Allure moyenne : ${formatPace(avgPacePerKm)}/km`;
+
+  // Calcul et affichage des temps de passage
+  let html = '';
+  splitPoints.forEach(splitDist => {
+    const splitTime = (splitDist / 1000) * avgPacePerKm;
+    const splitPace = avgPacePerKm; // L'allure reste constante
+    
+    html += `<div class="split-item">
+      <div class="split-distance">${formatDistance(splitDist)}</div>
+      <div class="split-time">${formatTime(splitTime)}</div>
+      <div class="split-pace">${formatPace(splitPace)}/km</div>
+    </div>`;
+  });
+  
+  document.getElementById('splitTimes').innerHTML = html;
+  document.getElementById('results').classList.add('show');
+  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function clearResults() {
+  hideError();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('hoursInput').selectedIndex = 0;
+  document.getElementById('minutesInput').selectedIndex = 0;
+  document.getElementById('secondsInput').selectedIndex = 0;
+  document.getElementById('distance').selectedIndex = 0;
+}
+</script>
+</body>
+</html>
