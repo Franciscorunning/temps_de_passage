@@ -13,7 +13,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #ecf0f1; min-height:100vh; padding:20px;
 }
-.container { max-width:650px; margin:0 auto; background:white; border-radius:12px; padding:30px; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+.container { max-width:750px; margin:0 auto; background:white; border-radius:12px; padding:30px; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
 .header { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:30px; padding-bottom:20px; border-bottom:2px solid #ecf0f1; }
 .header .runner-icon { font-size:32px; }
 .header h1 { color:#2c3e50; font-size:24px; font-weight:600; }
@@ -66,19 +66,38 @@ button.secondary:hover { background: #7f8c8d; }
 }
 
 .split-times { background:#f8f9fa; padding:20px; border-radius:8px; border:1px solid #e0e0e0; }
-.split-times h3 { color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:600; }
+.split-times h3 { color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:600; text-align:center; }
+
+.split-header {
+  display:grid; 
+  grid-template-columns:90px 1fr 70px 95px; 
+  gap:8px; 
+  padding:10px 0;
+  border-bottom:2px solid #bdc3c7;
+  margin-bottom:5px;
+}
+.split-header-item {
+  color:#5a6c7d;
+  font-weight:600;
+  font-size:12px;
+  text-align:center;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+
 .split-item { 
   display:grid; 
-  grid-template-columns:100px 1fr 1fr; 
-  gap:15px; 
+  grid-template-columns:90px 1fr 70px 95px; 
+  gap:8px; 
   padding:12px 0; 
   border-bottom:1px solid #e0e0e0; 
   align-items:center; 
 }
 .split-item:last-child { border-bottom:none; }
-.split-distance { color:#5a6c7d; font-weight:600; }
-.split-time { color:#2c3e50; font-weight:600; font-size:16px; }
-.split-pace { color:#7f8c8d; font-size:14px; }
+.split-distance { color:#5a6c7d; font-weight:600; font-size:14px; text-align:center; }
+.split-time { color:#2c3e50; font-weight:600; font-size:15px; text-align:center; }
+.split-pace { color:#7f8c8d; font-size:13px; text-align:center; }
+.split-arrival { color:#27ae60; font-weight:600; font-size:13px; text-align:center; }
 
 /* Styles pour les menus déroulants de temps */
 .time-input-container {
@@ -130,10 +149,21 @@ button.secondary:hover { background: #7f8c8d; }
   display: block;
 }
 
+.start-time-section {
+  background: #e8f5e9;
+  padding: 12px 15px 15px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #c8e6c9;
+}
+
 @media(max-width:768px){ 
-  .container{padding:20px;} 
+  .container{padding:20px; max-width:100%;} 
   .input-row{flex-direction:column;} 
-  .split-item{grid-template-columns:1fr; gap:5px;} 
+  .split-header{grid-template-columns:1fr; gap:0px; text-align:left; padding-left:10px;}
+  .split-header-item{text-align:left; margin-bottom:3px;}
+  .split-item{grid-template-columns:1fr; gap:3px; font-size:13px; padding-left:10px;} 
+  .split-distance, .split-time, .split-pace, .split-arrival{text-align:left;}
   .race-info-time{font-size:28px;} 
 }
 @media(max-width:480px){ 
@@ -192,6 +222,33 @@ button.secondary:hover { background: #7f8c8d; }
       </div>
     </div>
 
+    <div class="start-time-section">
+      <label>Heure de départ (optionnel)</label>
+      <span class="helper-text">Définissez l'heure de départ pour calculer les heures d'arrivée</span>
+      <div class="time-input-container">
+        <div class="time-input-group">
+          <span class="time-input-label">Heures</span>
+          <select id="startHoursInput" class="time-select">
+            <!-- Options générées par JavaScript -->
+          </select>
+        </div>
+        <span class="time-separator">:</span>
+        <div class="time-input-group">
+          <span class="time-input-label">Minutes</span>
+          <select id="startMinutesInput" class="time-select">
+            <!-- Options générées par JavaScript -->
+          </select>
+        </div>
+        <span class="time-separator">:</span>
+        <div class="time-input-group">
+          <span class="time-input-label">Secondes</span>
+          <select id="startSecondsInput" class="time-select">
+            <!-- Options générées par JavaScript -->
+          </select>
+        </div>
+      </div>
+    </div>
+
     <div class="error-message" id="errorMessage"></div>
 
     <button onclick="calculate()">Calculer les temps de passage</button>
@@ -207,6 +264,12 @@ button.secondary:hover { background: #7f8c8d; }
 
     <div class="split-times">
       <h3>⏱️ Temps de passage</h3>
+      <div class="split-header">
+        <div class="split-header-item">Km</div>
+        <div class="split-header-item">Temps</div>
+        <div class="split-header-item">Allure</div>
+        <div class="split-header-item">Heure</div>
+      </div>
       <div id="splitTimes"></div>
     </div>
   </div>
@@ -219,7 +282,7 @@ function initializeTimeSelects() {
   const minutesSelect = document.getElementById('minutesInput');
   const secondsSelect = document.getElementById('secondsInput');
 
-  // Heures (0-5 pour la plupart des courses)
+  // Heures (0-10 pour la plupart des courses)
   for(let i = 0; i <= 10; i++) {
     const option = document.createElement('option');
     option.value = i;
@@ -241,6 +304,35 @@ function initializeTimeSelects() {
     option.value = i;
     option.textContent = i.toString().padStart(2, '0');
     secondsSelect.appendChild(option);
+  }
+
+  // Initialisation de l'heure de départ
+  const startHoursSelect = document.getElementById('startHoursInput');
+  const startMinutesSelect = document.getElementById('startMinutesInput');
+  const startSecondsSelect = document.getElementById('startSecondsInput');
+
+  // Heures de départ (0-23)
+  for(let i = 0; i <= 23; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i.toString().padStart(2, '0');
+    startHoursSelect.appendChild(option);
+  }
+
+  // Minutes de départ (0-59)
+  for(let i = 0; i <= 59; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i.toString().padStart(2, '0');
+    startMinutesSelect.appendChild(option);
+  }
+
+  // Secondes de départ (0-59)
+  for(let i = 0; i <= 59; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i.toString().padStart(2, '0');
+    startSecondsSelect.appendChild(option);
   }
 }
 
@@ -283,6 +375,18 @@ function getDistanceName(distance) {
   return formatDistance(distance);
 }
 
+// Calculer l'heure d'arrivée
+function calculateArrivalTime(startHour, startMinute, startSecond, elapsedSeconds) {
+  const startTotalSeconds = startHour * 3600 + startMinute * 60 + startSecond;
+  const arrivalTotalSeconds = startTotalSeconds + elapsedSeconds;
+  
+  const hours = Math.floor(arrivalTotalSeconds / 3600) % 24;
+  const minutes = Math.floor((arrivalTotalSeconds % 3600) / 60);
+  const seconds = Math.floor(arrivalTotalSeconds % 60);
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
 function calculate(){
   hideError();
   
@@ -304,6 +408,12 @@ function calculate(){
     showError('Entrez un temps valide'); 
     return; 
   }
+
+  // Récupération de l'heure de départ
+  const startHour = parseInt(document.getElementById('startHoursInput').value) || 0;
+  const startMinute = parseInt(document.getElementById('startMinutesInput').value) || 0;
+  const startSecond = parseInt(document.getElementById('startSecondsInput').value) || 0;
+  const hasStartTime = startHour !== 0 || startMinute !== 0 || startSecond !== 0;
 
   // Calcul de l'allure moyenne (en secondes par km)
   const avgPacePerKm = totalSec / (distance / 1000);
@@ -329,10 +439,19 @@ function calculate(){
     const splitTime = (splitDist / 1000) * avgPacePerKm;
     const splitPace = avgPacePerKm; // L'allure reste constante
     
+    let arrivalTimeHtml = '';
+    if(hasStartTime) {
+      const arrivalTime = calculateArrivalTime(startHour, startMinute, startSecond, splitTime);
+      arrivalTimeHtml = `<div class="split-arrival">${arrivalTime}</div>`;
+    } else {
+      arrivalTimeHtml = `<div class="split-arrival">--</div>`;
+    }
+    
     html += `<div class="split-item">
       <div class="split-distance">${formatDistance(splitDist)}</div>
       <div class="split-time">${formatTime(splitTime)}</div>
-      <div class="split-pace">${formatPace(splitPace)}/km</div>
+      <div class="split-pace">${formatPace(splitPace)}</div>
+      ${arrivalTimeHtml}
     </div>`;
   });
   
@@ -348,6 +467,9 @@ function clearResults() {
   document.getElementById('minutesInput').selectedIndex = 0;
   document.getElementById('secondsInput').selectedIndex = 0;
   document.getElementById('distance').selectedIndex = 0;
+  document.getElementById('startHoursInput').selectedIndex = 0;
+  document.getElementById('startMinutesInput').selectedIndex = 0;
+  document.getElementById('startSecondsInput').selectedIndex = 0;
 }
 </script>
 </body>
