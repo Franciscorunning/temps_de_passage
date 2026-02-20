@@ -23,11 +23,13 @@ body {
 .input-group { flex:1; position:relative; }
 label { display:block; margin-bottom:6px; color:#34495e; font-weight:500; font-size:14px; }
 .helper-text { display:block; margin-bottom:6px; color:#7f8c8d; font-size:11px; font-style:italic; }
-select, input[type="number"] {
+select, input[type="number"], input[type="text"] {
   width:100%; padding:12px; border:1px solid #bdc3c7; border-radius:12px;
   font-size:16px; background:white;
 }
 select:focus, input:focus { outline:none; border-color:#3498db; }
+
+.custom-distance { display:none; margin-top:10px; }
 
 button {
   width:100%; padding:14px; background:#2c3e50; color:white; border:none; border-radius:12px;
@@ -157,18 +159,72 @@ button.secondary:hover { background: #7f8c8d; }
   border: 1px solid #c8e6c9;
 }
 
+/* Responsive Mobile */
 @media(max-width:768px){ 
   .container{padding:20px; max-width:100%;} 
   .input-row{flex-direction:column;} 
-  .split-header{grid-template-columns:1fr; gap:0px; text-align:left; padding-left:10px;}
-  .split-header-item{text-align:left; margin-bottom:3px;}
-  .split-item{grid-template-columns:1fr; gap:3px; font-size:13px; padding-left:10px;} 
-  .split-distance, .split-time, .split-pace, .split-arrival{text-align:left;}
+  
+  /* En-têtes sur mobile - grille 2x2 */
+  .split-header{
+    display:grid; 
+    grid-template-columns:1fr 1fr; 
+    gap:8px; 
+    padding:8px 0;
+    border-bottom:2px solid #bdc3c7;
+  }
+  .split-header-item{
+    text-align:center; 
+    font-size:11px;
+    padding:4px;
+  }
+  
+  /* Items sur mobile - grille 2x2 */
+  .split-item{
+    display:grid; 
+    grid-template-columns:1fr 1fr; 
+    gap:8px; 
+    padding:10px 0;
+    border-bottom:1px solid #e0e0e0;
+  } 
+  
+  .split-distance { 
+    text-align:center; 
+    font-size:13px;
+    padding:6px;
+    background:#ecf0f1;
+    border-radius:6px;
+  }
+  .split-time { 
+    text-align:center; 
+    font-size:14px;
+    padding:6px;
+    background:#ecf0f1;
+    border-radius:6px;
+  }
+  .split-pace { 
+    text-align:center; 
+    font-size:12px;
+    padding:6px;
+    background:#f8f9fa;
+    border-radius:6px;
+  }
+  .split-arrival { 
+    text-align:center; 
+    font-size:12px;
+    padding:6px;
+    background:#e8f5e9;
+    border-radius:6px;
+  }
+  
   .race-info-time{font-size:28px;} 
+  .split-times{padding:15px;}
 }
+
 @media(max-width:480px){ 
   .header h1{font-size:20px;} 
   .header .runner-icon{font-size:28px;} 
+  .container{padding:15px;}
+  .split-times h3{font-size:15px;}
 }
 </style>
 </head>
@@ -188,10 +244,14 @@ button.secondary:hover { background: #7f8c8d; }
         <span class="helper-text">Sélectionnez votre objectif de course</span>
         <select id="distance">
           <option value="" disabled selected>Sélectionner une distance</option>
+          <option value="5000">5 km</option>
           <option value="10000">10 km</option>
+          <option value="15000">15 km</option>
           <option value="21097.5">Semi-marathon</option>
           <option value="42195">Marathon</option>
+          <option value="other">Autre distance</option>
         </select>
+        <input type="text" id="customDistance" class="custom-distance" placeholder="Distance en km (ex: 8.15 ou 8,15)">
       </div>
     </div>
 
@@ -339,6 +399,18 @@ function initializeTimeSelects() {
 // Appel de l'initialisation au chargement
 initializeTimeSelects();
 
+// Gestion de l'affichage du champ distance personnalisée
+const distanceSelect = document.getElementById('distance');
+const customDistanceInput = document.getElementById('customDistance');
+
+distanceSelect.addEventListener('change', function() {
+  if(this.value === 'other') {
+    customDistanceInput.style.display = 'block';
+  } else {
+    customDistanceInput.style.display = 'none';
+  }
+});
+
 // Fonction pour afficher les erreurs
 function showError(message) {
   const errorDiv = document.getElementById('errorMessage');
@@ -363,13 +435,16 @@ function formatPace(sPerKm){
 
 function formatDistance(meters) {
   if (meters >= 1000) {
-    return `${meters / 1000} km`;
+    const km = meters / 1000;
+    return km % 1 === 0 ? `${km} km` : `${km.toFixed(2)} km`;
   }
   return `${meters} m`;
 }
 
 function getDistanceName(distance) {
+  if (distance === 5000) return '5 km';
   if (distance === 10000) return '10 km';
+  if (distance === 15000) return '15 km';
   if (distance === 21097.5) return 'Semi-marathon';
   if (distance === 42195) return 'Marathon';
   return formatDistance(distance);
@@ -387,15 +462,57 @@ function calculateArrivalTime(startHour, startMinute, startSecond, elapsedSecond
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
+// Générer les points de passage automatiques
+function generateSplitPoints(distanceMeters) {
+  const distanceKm = distanceMeters / 1000;
+  let splits = [];
+  
+  if(distanceKm <= 5) {
+    // Pour distances courtes (≤5km): tous les 1km
+    for(let i = 1; i <= Math.floor(distanceKm); i++) {
+      splits.push(i * 1000);
+    }
+  } else if(distanceKm <= 15) {
+    // Pour distances moyennes (5-15km): tous les 2.5km ou 5km
+    for(let i = 2.5; i < distanceKm; i += 2.5) {
+      splits.push(i * 1000);
+    }
+  } else {
+    // Pour longues distances (>15km): tous les 5km
+    for(let i = 5; i < distanceKm; i += 5) {
+      splits.push(i * 1000);
+    }
+  }
+  
+  // Toujours ajouter la distance finale
+  splits.push(distanceMeters);
+  
+  return splits;
+}
+
 function calculate(){
   hideError();
   
-  const distanceSelect = document.getElementById('distance');
-  let distance = parseFloat(distanceSelect.value);
+  let distance;
   
-  if(!distanceSelect.value || distanceSelect.value===''){
-    showError('Veuillez sélectionner une distance');
-    return;
+  if(distanceSelect.value === 'other') {
+    // Récupérer la distance personnalisée et remplacer virgule par point
+    const customValue = customDistanceInput.value.replace(',', '.');
+    const distanceKm = parseFloat(customValue);
+    
+    if(isNaN(distanceKm) || distanceKm <= 0) {
+      showError('Entrez une distance valide (ex: 8.15 ou 8,15)');
+      return;
+    }
+    
+    distance = distanceKm * 1000; // Convertir en mètres
+  } else {
+    distance = parseFloat(distanceSelect.value);
+    
+    if(!distanceSelect.value || distanceSelect.value===''){
+      showError('Veuillez sélectionner une distance');
+      return;
+    }
   }
 
   const hours = parseInt(document.getElementById('hoursInput').value) || 0;
@@ -418,15 +535,8 @@ function calculate(){
   // Calcul de l'allure moyenne (en secondes par km)
   const avgPacePerKm = totalSec / (distance / 1000);
 
-  // Définir les points de passage selon la distance
-  let splitPoints = [];
-  if (distance === 10000) {
-    splitPoints = [3000, 5000, 8000, 10000];
-  } else if (distance === 21097.5) {
-    splitPoints = [5000, 10000, 15000, 20000, 21097.5];
-  } else if (distance === 42195) {
-    splitPoints = [5000, 10000, 15000, 20000, 21097.5, 25000, 30000, 35000, 40000, 42195];
-  }
+  // Générer les points de passage
+  const splitPoints = generateSplitPoints(distance);
 
   // Affichage des informations de course
   document.getElementById('raceDistance').textContent = getDistanceName(distance);
@@ -467,6 +577,8 @@ function clearResults() {
   document.getElementById('minutesInput').selectedIndex = 0;
   document.getElementById('secondsInput').selectedIndex = 0;
   document.getElementById('distance').selectedIndex = 0;
+  document.getElementById('customDistance').value = '';
+  document.getElementById('customDistance').style.display = 'none';
   document.getElementById('startHoursInput').selectedIndex = 0;
   document.getElementById('startMinutesInput').selectedIndex = 0;
   document.getElementById('startSecondsInput').selectedIndex = 0;
