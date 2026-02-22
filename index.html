@@ -332,18 +332,9 @@ button.cta-email:hover {
 
     <button onclick="calculate()">Calculer les temps de passage</button>
     <button class="secondary" onclick="clearResults()">Effacer les résultats</button>
-
-    <!-- Nouveaux boutons CTA -->
-    <div class="cta-buttons">
-      <button class="cta-instagram" onclick="window.open('https://www.instagram.com/francisco.running/', '_blank')">
-        📸 Suivez-moi sur Instagram
-      </button>
-      <button class="cta-email" onclick="window.location.href='mailto:info@performancerunning.ch?subject=Demande de plan d\'entrainement'">
-        📧 Plan d'entraînement personnalisé
-      </button>
-    </div>
   </div>
 
+  <!-- Les résultats s'affichent maintenant ici, AVANT les boutons CTA -->
   <div class="results" id="results">
     <div class="race-info">
       <div class="race-info-distance" id="raceDistance">--</div>
@@ -360,6 +351,16 @@ button.cta-email:hover {
       </div>
       <div id="splitTimes"></div>
     </div>
+  </div>
+
+  <!-- Boutons CTA maintenant APRÈS les résultats -->
+  <div class="cta-buttons">
+    <button class="cta-instagram" onclick="window.open('https://www.instagram.com/francisco.running/', '_blank')">
+      📸 Suivez-moi sur Instagram
+    </button>
+    <button class="cta-email" onclick="window.location.href='mailto:info@performancerunning.ch?subject=Demande de plan d\'entrainement'">
+      📧 Plan d'entraînement personnalisé
+    </button>
   </div>
 </div>
 
