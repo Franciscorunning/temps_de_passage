@@ -41,6 +41,30 @@ button.secondary {
   margin-top: 10px;
 }
 button.secondary:hover { background: #7f8c8d; }
+
+/* Styles pour les boutons CTA */
+.cta-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #ecf0f1;
+}
+button.cta-instagram {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  flex: 1;
+}
+button.cta-instagram:hover {
+  background: linear-gradient(45deg, #e08323 0%, #d6582c 25%, #cc1733 50%, #bc1356 75%, #ac0878 100%);
+}
+button.cta-email {
+  background: #27ae60;
+  flex: 1;
+}
+button.cta-email:hover {
+  background: #229954;
+}
+
 .results { display:none; margin-top:30px; }
 .results.show { display:block; }
 
@@ -162,6 +186,11 @@ button.secondary:hover { background: #7f8c8d; }
 @media(max-width:768px){ 
   .container{padding:20px; max-width:100%;} 
   .input-row{flex-direction:column;} 
+  
+  /* Boutons CTA en colonne sur mobile */
+  .cta-buttons {
+    flex-direction: column;
+  }
   
   /* En-têtes sur mobile - grille 3 colonnes */
   .split-header{
@@ -303,6 +332,16 @@ button.secondary:hover { background: #7f8c8d; }
 
     <button onclick="calculate()">Calculer les temps de passage</button>
     <button class="secondary" onclick="clearResults()">Effacer les résultats</button>
+
+    <!-- Nouveaux boutons CTA -->
+    <div class="cta-buttons">
+      <button class="cta-instagram" onclick="window.open('https://www.instagram.com/francisco.running/', '_blank')">
+        📸 Suivez-moi sur Instagram
+      </button>
+      <button class="cta-email" onclick="window.location.href='mailto:info@performancerunning.ch?subject=Demande de plan d\'entrainement'">
+        📧 Plan d'entraînement personnalisé
+      </button>
+    </div>
   </div>
 
   <div class="results" id="results">
